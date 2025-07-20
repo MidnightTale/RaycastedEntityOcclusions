@@ -29,8 +29,8 @@ public class EventListener implements Listener {
         this.manager = mgr;
         this.config = cfg;
         this.plugin = plugin;
-        //load packet processor after 2 ticks in a bukkit runnable to ensure the plugin is fully loaded
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+        //load packet processor after 2 ticks to ensure the plugin is fully loaded
+        RaycastedEntityOcclusion.instance.foliaLib.getScheduler().runLater(() -> {
             if (config.packetEventsPresent) {
                 packetProcessor = plugin.getPacketProcessor();
             } else {

@@ -23,7 +23,7 @@ public class MetricsCollector {
         this.config = config;
         registerCustomMetrics();
 
-        plugin.getServer().getScheduler().runTaskTimer(plugin, this::collectMetrics, 0L, 6000L); // 6000 ticks = 5 minutes
+        RaycastedEntityOcclusion.instance.foliaLib.getScheduler().runTimer(task -> collectMetrics(), 0L, 6000L); // 6000 ticks = 5 minutes
     }
 
     public void registerCustomMetrics() {
