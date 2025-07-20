@@ -49,6 +49,7 @@ public class Engine {
         List<RayJob> jobs = new ArrayList<>();
         for (Player p : Bukkit.getOnlinePlayers()) {
             if (p.hasPermission("raycastedentityocclusions.bypass")) continue;
+            RaycastedEntityOcclusion.instance.foliaLib.getScheduler().runAtEntity(p, (runEngine) -> {
             Location eye = p.getEyeLocation().clone();
             Location predEye = null;
             if (cfg.engineMode == 2) {
@@ -76,11 +77,11 @@ public class Engine {
                     // schedule for async raycast (with or without predEye)
                     jobs.add(new RayJob(p, e, eye, predEye, target));
                 }
-            }
+            }});
         }
 
         // ----- PHASE 2: ASYNC RAYCASTS -----
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+        RaycastedEntityOcclusion.instance.foliaLib.getScheduler().runAsync((asyncRaycast) -> {
             List<RayResult> results = new ArrayList<>(jobs.size());
             for (RayJob job : jobs) {
                 // if the player is not in the same world as the target, skip
@@ -102,20 +103,20 @@ public class Engine {
             }
 
             // ----- PHASE 3: SYNC APPLY -----
-            Bukkit.getScheduler().runTask(plugin, () -> {
                 for (RayResult r : results) {
                     Player p = r.player;
                     Entity ent = r.target;
                     if (p != null && ent != null) {
+                        RaycastedEntityOcclusion.instance.foliaLib.getScheduler().runAtEntity(p, (runEngine) -> {
                         boolean currentState = p.canSee(ent);
-                        if (currentState == r.visible) continue;
-                        if (r.visible) p.showEntity(plugin, ent);
-                        else {
-                            p.hideEntity(plugin, ent);
-                        }
+                        if (currentState != r.visible) {
+                            if (r.visible) p.showEntity(plugin, ent);
+                            else {
+                                p.hideEntity(plugin, ent);
+                            }
+                        }});
                     }
                 }
-            });
         });
 
     }
@@ -129,7 +130,7 @@ public class Engine {
                 int chunkX = p.getLocation().getBlockX() >> 4;
                 int chunkZ = p.getLocation().getBlockZ() >> 4;
                 //async run with vars passed in
-                Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                RaycastedEntityOcclusion.instance.foliaLib.getScheduler().runAsync((runTileEngine) -> {
                     int chunksRadius = (cfg.searchRadius + 15) / 16;
                     HashSet<Location> tileEntities = new HashSet<>();
                     for (int x = (-chunksRadius/2)+chunkX; x <= chunksRadius+chunkX; x++) {
@@ -202,7 +203,7 @@ public class Engine {
 
     }
     public static void syncToggleTileEntity(Player p, Location loc, boolean bool, RaycastedEntityOcclusion plugin) {
-        Bukkit.getScheduler().runTask(plugin, () -> {
+        RaycastedEntityOcclusion.instance.foliaLib.getScheduler().runAtEntity(p, (syncToggleTileEntity) -> {
             if (bool) {
                 showTileEntity(p, loc);
             } else {

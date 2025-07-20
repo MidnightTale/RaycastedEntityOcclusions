@@ -42,6 +42,8 @@ import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
 import javax.net.ssl.HttpsURLConnection;
+
+import games.cubi.raycastedEntityOcclusion.RaycastedEntityOcclusion;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -115,7 +117,8 @@ public class Metrics {
                         this::appendServiceData,
                         isFolia
                                 ? null
-                                : submitDataTask -> Bukkit.getScheduler().runTask(plugin, submitDataTask),
+                                : submitDataTask -> RaycastedEntityOcclusion.instance.foliaLib.getScheduler().runNextTick(task -> submitDataTask.run()),
+
                         plugin::isEnabled,
                         (message, error) -> this.plugin.getLogger().log(Level.WARNING, message, error),
                         (message) -> this.plugin.getLogger().log(Level.INFO, message),

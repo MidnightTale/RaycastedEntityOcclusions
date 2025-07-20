@@ -14,10 +14,12 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitRunnable;
+import com.tcoded.folialib.FoliaLib;
 import games.cubi.raycastedEntityOcclusion.bStats.MetricsCollector;
 
 public class RaycastedEntityOcclusion extends JavaPlugin implements CommandExecutor {
+    public static RaycastedEntityOcclusion instance;
+    public FoliaLib foliaLib;
     private ConfigManager cfg;
     private ChunkSnapshotManager snapMgr;
     private MovementTracker tracker;
@@ -42,6 +44,8 @@ public class RaycastedEntityOcclusion extends JavaPlugin implements CommandExecu
 
     @Override
     public void onEnable() {
+        instance = this;
+        foliaLib = new FoliaLib(this);
         cfg = new ConfigManager(this);
         snapMgr = new ChunkSnapshotManager(this);
         tracker = new MovementTracker(this);
@@ -67,27 +71,20 @@ public class RaycastedEntityOcclusion extends JavaPlugin implements CommandExecu
 
 
         // TODO: Move this somewhere else, the main class should be cleaner
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                tick++;
-                Engine.runEngine(cfg, snapMgr, tracker, RaycastedEntityOcclusion.this);
-                Engine.runTileEngine(cfg, snapMgr, tracker, RaycastedEntityOcclusion.this);
-            }
-        }.runTaskTimer(this, 0L, 1L);
+        RaycastedEntityOcclusion.instance.foliaLib.getScheduler().runTimer(() -> {
+            tick++;
+            Engine.runEngine(cfg, snapMgr, tracker, RaycastedEntityOcclusion.this);
+            Engine.runTileEngine(cfg, snapMgr, tracker, RaycastedEntityOcclusion.this);
+        },1L, 1L);
 
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                if (packetEventsPresent && Bukkit.getPluginManager().isPluginEnabled("packetevents")) {
-                    cfg.setPacketEventsPresent(true);
-                    packetProcessor = new PacketProcessor(RaycastedEntityOcclusion.this);
-                    getLogger().info("PacketEvents is enabled, enabling packet-based tablist modification.");
-                }
+        RaycastedEntityOcclusion.instance.foliaLib.getScheduler().runLater(() -> {
+            if (packetEventsPresent && Bukkit.getPluginManager().isPluginEnabled("packetevents")) {
+                cfg.setPacketEventsPresent(true);
+                packetProcessor = new PacketProcessor(RaycastedEntityOcclusion.this);
+                getLogger().info("PacketEvents is enabled, enabling packet-based tablist modification.");
             }
-        }.runTaskLater(this, 1L);
+        },1L);
     }
-
 
     public ConfigManager getConfigManager() {
         return cfg;

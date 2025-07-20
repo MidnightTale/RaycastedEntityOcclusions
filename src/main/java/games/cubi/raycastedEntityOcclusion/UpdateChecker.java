@@ -6,8 +6,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
 
 
 import java.io.BufferedReader;
@@ -29,7 +27,7 @@ public class UpdateChecker {
     public static CompletableFuture<String> fetchFeaturedVersion(RaycastedEntityOcclusion plugin) {
         CompletableFuture<String> future = new CompletableFuture<>();
 
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+        RaycastedEntityOcclusion.instance.foliaLib.getScheduler().runAsync((fetchFeaturedVersion) -> {
 
             final String url = "https://api.modrinth.com/v2/project/raycasted-entity-occlusions/version?featured=true";
             try (final InputStreamReader reader = new InputStreamReader(new URL(url).openConnection().getInputStream())) {
@@ -57,7 +55,7 @@ public class UpdateChecker {
     public static void checkForUpdates(RaycastedEntityOcclusion plugin, CommandSender audience) {
         fetchFeaturedVersion(plugin).thenAccept(version -> {
             // This runs synchronously when the version is fetched
-            Bukkit.getScheduler().runTask(plugin, () -> {
+            RaycastedEntityOcclusion.instance.foliaLib.getScheduler().runNextTick((checkForUpdates) -> {
                 if (plugin.getDescription().getVersion().equals(version)) {
                     audience.sendRichMessage("<green>You are using the latest version of Raycasted Entity Occlusions.");
                 } else {
@@ -66,7 +64,7 @@ public class UpdateChecker {
             });
         }).exceptionally(ex -> {
             // Handle error (e.g., log the exception)
-            Bukkit.getScheduler().runTask(plugin, () -> {
+            RaycastedEntityOcclusion.instance.foliaLib.getScheduler().runNextTick((checkForUpdatesFail) -> {
                 plugin.getLogger().warning("Failed to fetch version: " + ex.getMessage());
             });
             return null;
