@@ -149,11 +149,11 @@ public class Engine {
 
                         double distSquared = loc.distanceSquared(p.getLocation());
                         if (distSquared > cfg.searchRadius * cfg.searchRadius) {
-                            hideTileEntity(p, loc);
+                            RaycastedEntityOcclusion.instance.foliaLib.getScheduler().runAtLocation(loc, task -> hideTileEntity(p, loc));
                             continue;
                         }
                         if (distSquared < cfg.alwaysShowRadius * cfg.alwaysShowRadius) {
-                            showTileEntity(p, loc);
+                            RaycastedEntityOcclusion.instance.foliaLib.getScheduler().runAtLocation(loc, task -> showTileEntity(p, loc));
                             continue;
                         }
 
